@@ -6,124 +6,192 @@
 <title>Dashboard UMKM</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; background:#f5f5f5; }
-h1,h2 { text-align:center; }
-.card { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-table { width:100%; border-collapse: collapse; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-th { background:#eee; }
-img.nota { width:80px; border-radius:4px; }
-.chart-container { width:100%; max-width:800px; margin:0 auto; }
-iframe.tally { width:100%; border:none; }
+body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#f5f6fa; }
+h1,h2 { text-align:center; margin:0 0 15px; }
+.card { background:white; padding:20px; border-radius:10px; margin:20px auto; max-width:1000px; box-shadow:0 3px 15px rgba(0,0,0,0.1);}
+table { width:100%; border-collapse: collapse; margin-top:15px; }
+th, td { border:1px solid #ddd; padding:10px; text-align:center; }
+th { background:#f1f2f6; }
+img.nota { width:80px; border-radius:5px; }
+.chart-container { width:100%; max-width:900px; margin:0 auto; }
+input, button { padding:10px; margin:5px 0; width:100%; border-radius:5px; border:1px solid #ccc; }
+button { cursor:pointer; background:#2e86de; color:white; font-weight:bold; transition:0.3s; }
+button:hover { background:#1b4f72; }
+#dashboard { display:none; }
+#login-card, #register-card { max-width:400px; margin:50px auto; }
+.logout-btn { background:#e74c3c; margin-top:10px; }
+.logout-btn:hover { background:#c0392b; }
+@media(max-width:768px){
+  .card { margin:10px; padding:15px; }
+  img.nota { width:60px; }
+  input, button { padding:8px; }
+}
 </style>
 </head>
 <body>
 
-<h1>Dashboard UMKM</h1>
-
-<!-- Ringkasan Keuangan -->
-<div class="card">
-  <h2>Ringkasan Keuangan</h2>
-  <p>Total Pemasukan: <span id="totalPemasukan">0</span></p>
-  <p>Total Pengeluaran: <span id="totalPengeluaran">0</span></p>
-  <p>Keuntungan Bersih: <span id="keuntunganBersih">0</span></p>
-  <p>Prakiraan Pajak (1% omzet): <span id="prakiraanPajak">0</span></p>
+<!-- REGISTRASI -->
+<div id="register-card" class="card">
+  <h1>Registrasi UMKM</h1>
+  <input type="text" id="regUsaha" placeholder="Nama Usaha" required>
+  <input type="email" id="regEmail" placeholder="Email" required>
+  <input type="password" id="regPassword" placeholder="Password" required>
+  <button onclick="register()">Daftar</button>
+  <p style="text-align:center;">Sudah punya akun? <a href="#" onclick="showLogin()">Login</a></p>
+  <p id="regError" style="color:red; text-align:center;"></p>
 </div>
 
-<!-- Tally Form Embed -->
-<div class="card">
-  <h2>Input Transaksi</h2>
-  <iframe class="tally" src="https://tally.so/embed/dWdjgo?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" height="700"></iframe>
+<!-- LOGIN -->
+<div id="login-card" class="card" style="display:none;">
+  <h1>Login UMKM</h1>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p style="text-align:center;">Belum punya akun? <a href="#" onclick="showRegister()">Daftar</a></p>
+  <p id="loginError" style="color:red; text-align:center;"></p>
 </div>
 
-<!-- Chart Arus Kas -->
-<div class="card chart-container">
-  <h2>Arus Kas Bulanan</h2>
-  <canvas id="arusKasChart" height="100"></canvas>
-</div>
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <h1 id="namaUsahaHeader">Dashboard UMKM</h1>
+  <button class="logout-btn" onclick="logout()">Logout</button>
 
-<!-- Tabel Transaksi -->
-<div class="card">
-  <h2>Daftar Transaksi</h2>
-  <table id="transaksiTable">
-    <thead>
-      <tr>
-        <th>Tanggal</th>
-        <th>Tipe</th>
-        <th>Jumlah</th>
-        <th>Keterangan</th>
-        <th>Nota</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- Ringkasan Keuangan -->
+  <div class="card">
+    <h2>Ringkasan Keuangan</h2>
+    <p>Total Pemasukan: <span id="totalPemasukan">0</span></p>
+    <p>Total Pengeluaran: <span id="totalPengeluaran">0</span></p>
+    <p>Keuntungan Bersih: <span id="keuntunganBersih">0</span></p>
+    <p>Prakiraan Pajak (1% omzet): <span id="prakiraanPajak">0</span></p>
+  </div>
+
+  <!-- Input Transaksi -->
+  <div class="card">
+    <h2>Tambah Data Transaksi</h2>
+    <iframe class="tally" src="https://tally.so/embed/dWdjgo?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" height="600" style="width:100%;border:none;"></iframe>
+  </div>
+
+  <!-- Chart Arus Kas -->
+  <div class="card chart-container">
+    <h2>Arus Kas Bulanan</h2>
+    <canvas id="arusKasChart" height="100"></canvas>
+  </div>
+
+  <!-- Tabel Transaksi -->
+  <div class="card">
+    <h2>Daftar Transaksi</h2>
+    <table id="transaksiTable">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Tipe</th>
+          <th>Jumlah</th>
+          <th>Keterangan</th>
+          <th>Nota</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
-// ===== LINK CSV GOOGLE SHEETS =====
-const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS-qVdnfU6If_Ffkt_RJbIxAbgp1F52ne8t6hf0xkatr1iakkzTS4e_IEta64jpHoHBr0tL5AOsYOQX/pub?output=csv';
+// ===== SESSION & USER MANAGEMENT LOCALSTORAGE =====
+function showRegister(){ document.getElementById('register-card').style.display='block'; document.getElementById('login-card').style.display='none'; }
+function showLogin(){ document.getElementById('register-card').style.display='none'; document.getElementById('login-card').style.display='block'; }
 
-// ===== FUNCTION FETCH CSV =====
-async function fetchCSV(url) {
-  const res = await fetch(url);
-  const text = await res.text();
-  return text.split('\n').slice(1).map(row => {
-    const cols = row.split(',');
-    return {
-      tanggal: cols[0],
-      tipe: cols[1],
-      jumlah: parseFloat(cols[2]),
-      keterangan: cols[3],
-      nota: cols[4]
-    };
-  });
+function register(){
+  const usaha=document.getElementById('regUsaha').value;
+  const email=document.getElementById('regEmail').value;
+  const pass=document.getElementById('regPassword').value;
+  let users=JSON.parse(localStorage.getItem('users')||'[]');
+  if(users.find(u=>u.email===email)){ document.getElementById('regError').textContent='Email sudah terdaftar'; return; }
+  users.push({email,password:pass,usaha:usaha});
+  localStorage.setItem('users',JSON.stringify(users));
+  alert('Registrasi berhasil, silahkan login!');
+  showLogin();
 }
 
-// ===== MAIN =====
-fetchCSV(csvUrl).then(dataTransaksi => {
-  // ===== Rekap Keuangan =====
-  let totalPemasukan = 0, totalPengeluaran = 0;
-  dataTransaksi.forEach(t => {
-    if(t.tipe==='Pemasukan') totalPemasukan += t.jumlah;
-    else totalPengeluaran += t.jumlah;
+function login(){
+  const email=document.getElementById('loginEmail').value;
+  const pass=document.getElementById('loginPassword').value;
+  let users=JSON.parse(localStorage.getItem('users')||'[]');
+  const user=users.find(u=>u.email===email && u.password===pass);
+  if(user){
+    sessionStorage.setItem('loggedIn','true');
+    sessionStorage.setItem('usaha',user.usaha);
+    showDashboard();
+  } else { document.getElementById('loginError').textContent='Email atau Password salah'; }
+}
+
+function logout(){
+  sessionStorage.clear();
+  location.reload();
+}
+
+function showDashboard(){
+  document.getElementById('login-card').style.display='none';
+  document.getElementById('register-card').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('namaUsahaHeader').textContent='Dashboard: '+sessionStorage.getItem('usaha');
+  loadData();
+}
+
+// ===== CEK SESSION =====
+if(sessionStorage.getItem('loggedIn')==='true'){ showDashboard(); }
+
+// ===== LINK CSV GOOGLE SHEETS =====
+const csvUrl='https://docs.google.com/spreadsheets/d/e/2PACX-1vS-qVdnfU6If_Ffkt_RJbIxAbgp1F52ne8t6hf0xkatr1iakkzTS4e_IEta64jpHoHBr0tL5AOsYOQX/pub?output=csv';
+
+// ===== FETCH DATA DAN TAMPILKAN =====
+async function loadData(){
+  const res=await fetch(csvUrl);
+  const text=await res.text();
+  const rows=text.split('\n').slice(1).map(r=>{
+    const cols=r.split(',');
+    return { tanggal: cols[0], tipe: cols[1], jumlah: parseFloat(cols[2]), keterangan: cols[3], nota: cols[4] };
   });
-  const keuntungan = totalPemasukan - totalPengeluaran;
-  const pajak = totalPemasukan * 0.01;
 
-  document.getElementById('totalPemasukan').textContent = 'Rp ' + totalPemasukan.toLocaleString();
-  document.getElementById('totalPengeluaran').textContent = 'Rp ' + totalPengeluaran.toLocaleString();
-  document.getElementById('keuntunganBersih').textContent = 'Rp ' + keuntungan.toLocaleString();
-  document.getElementById('prakiraanPajak').textContent = 'Rp ' + pajak.toLocaleString();
+  // ===== REKAP KEUANGAN =====
+  let totalPemasukan=0, totalPengeluaran=0;
+  rows.forEach(t=>{ if(t.tipe==='Pemasukan') totalPemasukan+=t.jumlah; else totalPengeluaran+=t.jumlah; });
+  const keuntungan=totalPemasukan-totalPengeluaran;
+  const pajak=totalPemasukan*0.01;
 
-  // ===== Tabel Transaksi =====
-  const tbody = document.getElementById('transaksiTable').querySelector('tbody');
-  dataTransaksi.forEach(t => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
+  document.getElementById('totalPemasukan').textContent='Rp '+totalPemasukan.toLocaleString();
+  document.getElementById('totalPengeluaran').textContent='Rp '+totalPengeluaran.toLocaleString();
+  document.getElementById('keuntunganBersih').textContent='Rp '+keuntungan.toLocaleString();
+  document.getElementById('prakiraanPajak').textContent='Rp '+pajak.toLocaleString();
+
+  // ===== TABEL =====
+  const tbody=document.getElementById('transaksiTable').querySelector('tbody');
+  tbody.innerHTML='';
+  rows.forEach(t=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
       <td>${t.tanggal}</td>
       <td>${t.tipe}</td>
       <td>Rp ${t.jumlah.toLocaleString()}</td>
       <td>${t.keterangan}</td>
-      <td>${t.nota ? `<a href="${t.nota}" target="_blank"><img src="${t.nota}" class="nota"></a>` : ''}</td>
+      <td>${t.nota?`<a href="${t.nota}" target="_blank"><img src="${t.nota}" class="nota"></a>`:''}</td>
     `;
     tbody.appendChild(tr);
   });
 
-  // ===== Chart Arus Kas =====
-  const ctx = document.getElementById('arusKasChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: dataTransaksi.map(t => t.tanggal),
-      datasets: [
-        { label:'Pemasukan', data:dataTransaksi.map(t => t.tipe==='Pemasukan'?t.jumlah:0), borderColor:'green', backgroundColor:'rgba(0,255,0,0.1)', fill:true },
-        { label:'Pengeluaran', data:dataTransaksi.map(t => t.tipe==='Pengeluaran'?t.jumlah:0), borderColor:'red', backgroundColor:'rgba(255,0,0,0.1)', fill:true }
+  // ===== CHART =====
+  const ctx=document.getElementById('arusKasChart').getContext('2d');
+  new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:rows.map(t=>t.tanggal),
+      datasets:[
+        {label:'Pemasukan', data:rows.map(t=>t.tipe==='Pemasukan'?t.jumlah:0), borderColor:'green', backgroundColor:'rgba(0,255,0,0.1)', fill:true},
+        {label:'Pengeluaran', data:rows.map(t=>t.tipe==='Pengeluaran'?t.jumlah:0), borderColor:'red', backgroundColor:'rgba(255,0,0,0.1)', fill:true}
       ]
     },
-    options: { responsive:true, plugins:{legend:{position:'top'}} }
+    options:{responsive:true, plugins:{legend:{position:'top'}}}
   });
-});
+}
 </script>
-
 </body>
 </html>
