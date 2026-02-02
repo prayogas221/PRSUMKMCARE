@@ -3,195 +3,115 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PSR UMKM Care</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.css">
+<title>Dashboard UMKM</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body{font-family:sans-serif;background:#f0f0f0;padding:1rem;color:#333}
-.hidden{display:none}
-.container{max-width:800px;margin:auto;background:white;padding:1rem;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.15);}
-h2{text-align:center;color:#ff4d6d}
-input,select,button{width:100%;padding:0.5rem;margin:0.3rem 0;border-radius:6px;border:1px solid #ccc}
-button{background:#2d5016;color:white;font-weight:600;border:none;cursor:pointer;transition:0.3s;}
-button:hover{opacity:0.85}
-table{width:100%;border-collapse: collapse;margin-top:0.5rem}
-th,td{border:1px solid #ccc;padding:6px;font-size:0.85rem;text-align:center}
-tr:hover{background:#f0f8ff}
-.thumbnail{width:50px;height:50px;object-fit:cover;border-radius:4px;}
-.chart-container{width:100%;margin-top:1rem}
+body { font-family: Arial, sans-serif; margin: 20px; background:#f5f5f5; }
+h1,h2 { text-align:center; }
+.card { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+table { width:100%; border-collapse: collapse; margin-top:10px; }
+th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+th { background:#eee; }
+img.nota { width:80px; border-radius:4px; }
+.chart-container { width:100%; max-width:800px; margin:0 auto; }
+iframe.tally { width:100%; border:none; }
 </style>
 </head>
 <body>
 
-<div class="container" id="registerDiv">
-  <h2>Register UMKM</h2>
-  <input type="email" id="regEmail" placeholder="Email">
-  <input type="password" id="regPassword" placeholder="Password">
-  <input type="text" id="regNama" placeholder="Nama Usaha">
-  <button onclick="register()">Register</button>
-  <p id="regMsg"></p>
+<h1>Dashboard UMKM</h1>
+
+<!-- Ringkasan Keuangan -->
+<div class="card">
+  <h2>Ringkasan Keuangan</h2>
+  <p>Total Pemasukan: <span id="totalPemasukan">0</span></p>
+  <p>Total Pengeluaran: <span id="totalPengeluaran">0</span></p>
+  <p>Keuntungan Bersih: <span id="keuntunganBersih">0</span></p>
+  <p>Prakiraan Pajak (1% omzet): <span id="prakiraanPajak">0</span></p>
 </div>
 
-<div class="container hidden" id="loginDiv">
-  <h2>Login UMKM</h2>
-  <input type="email" id="loginEmail" placeholder="Email">
-  <input type="password" id="loginPassword" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <p id="loginMsg"></p>
+<!-- Tally Form Embed -->
+<div class="card">
+  <h2>Input Transaksi</h2>
+  <iframe class="tally" src="https://tally.so/embed/dWdjgo?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" height="700"></iframe>
 </div>
 
-<div class="container hidden" id="dashboardDiv">
-  <h2>Dashboard UMKM</h2>
-  <p id="welcomeMsg"></p>
+<!-- Chart Arus Kas -->
+<div class="card chart-container">
+  <h2>Arus Kas Bulanan</h2>
+  <canvas id="arusKasChart" height="100"></canvas>
+</div>
 
-  <h3>Input Transaksi</h3>
-  <select id="tipeTrans">
-    <option value="pemasukan">Pemasukan</option>
-    <option value="pengeluaran">Pengeluaran</option>
-  </select>
-  <input type="number" id="jumlahTrans" placeholder="Jumlah">
-  <input type="text" id="keteranganTrans" placeholder="Keterangan">
-  <input type="file" id="fotoNota">
-  <button onclick="addTransaksi()">Tambah Transaksi</button>
-
-  <h3>Daftar Transaksi</h3>
-  <table id="transTable">
+<!-- Tabel Transaksi -->
+<div class="card">
+  <h2>Daftar Transaksi</h2>
+  <table id="transaksiTable">
     <thead>
       <tr>
-        <th>Tanggal</th><th>Tipe</th><th>Jumlah</th><th>Keterangan</th><th>Nota</th><th>Status</th>
+        <th>Tanggal</th>
+        <th>Tipe</th>
+        <th>Jumlah</th>
+        <th>Keterangan</th>
+        <th>Nota</th>
       </tr>
     </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr><td colspan="2">Total Laba</td><td id="totalLaba">0</td><td>Pajak 0.5%</td><td id="totalPajak" colspan="2">0</td></tr>
-    </tfoot>
+    <tbody>
+      <!-- Data akan muncul di sini -->
+    </tbody>
   </table>
-
-  <div class="chart-container">
-    <canvas id="chartTransaksi"></canvas>
-  </div>
-
-  <button onclick="downloadPDF()">Download Laporan PDF</button>
-  <button onclick="logout()">Logout</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const WEB_APP_URL="https://script.google.com/macros/s/AKfycbyZoJxsd4k8Zs_E59iixCiua75gQCtcpyaiRfwwzJg-T_BaTBa3oZkWc8N4Af4T2xvmag/exec";
-let currentUser="";
-let transaksiData=[];
+// ===== Contoh Data Transaksi =====
+// Nanti bisa diganti fetch dari Google Sheets / CSV Tally
+const dataTransaksi = [
+  { tanggal: '2026-02-01', tipe: 'Pemasukan', jumlah: 500000, keterangan: 'Penjualan Produk A', nota: 'https://raw.githubusercontent.com/username/umkm-nota/main/nota/nota1.jpg' },
+  { tanggal: '2026-02-02', tipe: 'Pengeluaran', jumlah: 200000, keterangan: 'Beli Bahan Baku', nota: 'https://raw.githubusercontent.com/username/umkm-nota/main/nota/nota2.jpg' },
+  { tanggal: '2026-02-03', tipe: 'Pemasukan', jumlah: 700000, keterangan: 'Penjualan Produk B', nota: 'https://raw.githubusercontent.com/username/umkm-nota/main/nota/nota3.jpg' }
+];
 
-function register(){
-  const email=document.getElementById('regEmail').value;
-  const password=document.getElementById('regPassword').value;
-  const nama=document.getElementById('regNama').value;
-  fetch(WEB_APP_URL,{method:'POST',body:JSON.stringify({action:"register",email,password,nama_usaha:nama}),headers:{'Content-Type':'application/json'}})
-  .then(r=>r.json()).then(data=>{
-    document.getElementById('regMsg').textContent=data.message;
-    if(data.status){ document.getElementById('registerDiv').classList.add('hidden'); document.getElementById('loginDiv').classList.remove('hidden'); }
-  });
-}
+// ===== Rekap Keuangan =====
+let totalPemasukan = 0, totalPengeluaran = 0;
+dataTransaksi.forEach(t => {
+  if(t.tipe === 'Pemasukan') totalPemasukan += t.jumlah;
+  else totalPengeluaran += t.jumlah;
+});
+const keuntungan = totalPemasukan - totalPengeluaran;
+const pajak = totalPemasukan * 0.01;
 
-function login(){
-  const email=document.getElementById('loginEmail').value;
-  const password=document.getElementById('loginPassword').value;
-  fetch(WEB_APP_URL,{method:'POST',body:JSON.stringify({action:"login",email,password}),headers:{'Content-Type':'application/json'}})
-  .then(r=>r.json()).then(data=>{
-    document.getElementById('loginMsg').textContent=data.message;
-    if(data.status){
-      currentUser=email;
-      document.getElementById('loginDiv').classList.add('hidden');
-      document.getElementById('dashboardDiv').classList.remove('hidden');
-      document.getElementById('welcomeMsg').textContent="Selamat datang, "+data.nama_usaha;
-      loadTransaksi();
-    }
-  });
-}
+document.getElementById('totalPemasukan').textContent = 'Rp ' + totalPemasukan.toLocaleString();
+document.getElementById('totalPengeluaran').textContent = 'Rp ' + totalPengeluaran.toLocaleString();
+document.getElementById('keuntunganBersih').textContent = 'Rp ' + keuntungan.toLocaleString();
+document.getElementById('prakiraanPajak').textContent = 'Rp ' + pajak.toLocaleString();
 
-function addTransaksi(){
-  const fotoInput=document.getElementById('fotoNota');
-  if(fotoInput.files.length>0){
-    const reader=new FileReader();
-    reader.onload=function(e){ sendTransaksi(e.target.result); };
-    reader.readAsDataURL(fotoInput.files[0]);
-  } else sendTransaksi("");
-}
+// ===== Tabel Transaksi =====
+const tbody = document.getElementById('transaksiTable').querySelector('tbody');
+dataTransaksi.forEach(t => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${t.tanggal}</td>
+    <td>${t.tipe}</td>
+    <td>Rp ${t.jumlah.toLocaleString()}</td>
+    <td>${t.keterangan}</td>
+    <td><a href="${t.nota}" target="_blank"><img src="${t.nota}" class="nota" alt="Nota"></a></td>
+  `;
+  tbody.appendChild(tr);
+});
 
-function sendTransaksi(fotoBase64){
-  const tipe=document.getElementById('tipeTrans').value;
-  const jumlah=document.getElementById('jumlahTrans').value;
-  const ket=document.getElementById('keteranganTrans').value;
-  fetch(WEB_APP_URL,{method:'POST',body:JSON.stringify({action:"addTransaksi",email:currentUser,tipe,jumlah,keterangan:ket,fotoBase64}),headers:{'Content-Type':'application/json'}})
-  .then(r=>r.json()).then(data=>{ alert(data.message); loadTransaksi(); });
-}
-
-function loadTransaksi(){
-  fetch(WEB_APP_URL,{method:'POST',body:JSON.stringify({action:"getTransaksi",email:currentUser}),headers:{'Content-Type':'application/json'}})
-  .then(r=>r.json()).then(data=>{
-    transaksiData=data;
-    const tbody=document.querySelector('#transTable tbody');
-    tbody.innerHTML="";
-    let totalLaba=0,totalPajak=0;
-    data.forEach(t=>{
-      const row=`<tr>
-        <td>${new Date(t.tanggal).toLocaleString()}</td>
-        <td>${t.tipe}</td>
-        <td>${t.jumlah}</td>
-        <td>${t.keterangan}</td>
-        <td>${t.fotoBase64 ? `<img src="${t.fotoBase64}" class="thumbnail">`:"-"}</td>
-        <td>${t.status}</td>
-      </tr>`;
-      tbody.innerHTML+=row;
-      totalLaba+=t.laba;
-      totalPajak+=t.pajak;
-    });
-    document.getElementById('totalLaba').textContent=totalLaba;
-    document.getElementById('totalPajak').textContent=totalPajak.toFixed(2);
-    renderChart(data);
-  });
-}
-
-let chartInstance=null;
-function renderChart(data){
-  const ctx=document.getElementById('chartTransaksi').getContext('2d');
-  const labels=data.map(t=>new Date(t.tanggal).toLocaleDateString());
-  const pemasukan=data.map(t=>t.tipe==="pemasukan"?t.jumlah:0);
-  const pengeluaran=data.map(t=>t.tipe==="pengeluaran"?t.jumlah:0);
-  if(chartInstance) chartInstance.destroy();
-  chartInstance=new Chart(ctx,{
-    type:'line',
-    data:{
-      labels:labels,
-      datasets:[
-        {label:'Pemasukan',data:pemasukan,borderColor:'#ff4d6d',backgroundColor:'rgba(255,77,109,0.2)',tension:0.3},
-        {label:'Pengeluaran',data:pengeluaran,borderColor:'#4d79ff',backgroundColor:'rgba(77,121,255,0.2)',tension:0.3}
-      ]
-    },
-    options:{responsive:true,plugins:{legend:{position:'top'}}}
-  });
-}
-
-function downloadPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(14);
-  doc.text("Laporan Keuangan UMKM",10,10);
-  doc.setFontSize(10);
-  let y=20;
-  doc.text("Tanggal - Tipe - Jumlah - Keterangan",10,y);
-  transaksiData.forEach(t=>{
-    y+=7;
-    doc.text(`${new Date(t.tanggal).toLocaleDateString()} - ${t.tipe} - ${t.jumlah} - ${t.keterangan}`,10,y);
-  });
-  y+=10;
-  const totalLaba=transaksiData.reduce((a,b)=>a+b.laba,0);
-  const totalPajak=transaksiData.reduce((a,b)=>a+b.pajak,0);
-  doc.text(`Total Laba: ${totalLaba}`,10,y);
-  doc.text(`Pajak 0.5%: ${totalPajak.toFixed(2)}`,10,y+7);
-  doc.save("Laporan_Keuangan.pdf");
-}
-
-function logout(){currentUser="";document.getElementById('dashboardDiv').classList.add('hidden');document.getElementById('loginDiv').classList.remove('hidden');}
+// ===== Chart Arus Kas =====
+const ctx = document.getElementById('arusKasChart').getContext('2d');
+const arusKasChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: dataTransaksi.map(t => t.tanggal),
+    datasets: [
+      { label: 'Pemasukan', data: dataTransaksi.map(t => t.tipe==='Pemasukan'?t.jumlah:0), borderColor: 'green', backgroundColor: 'rgba(0,255,0,0.1)', fill:true },
+      { label: 'Pengeluaran', data: dataTransaksi.map(t => t.tipe==='Pengeluaran'?t.jumlah:0), borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.1)', fill:true }
+    ]
+  },
+  options: { responsive:true, plugins:{legend:{position:'top'}} }
+});
 </script>
+
 </body>
 </html>
