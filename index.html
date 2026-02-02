@@ -55,61 +55,73 @@ iframe.tally { width:100%; border:none; }
         <th>Nota</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Data akan muncul di sini -->
-    </tbody>
+    <tbody></tbody>
   </table>
 </div>
 
 <script>
-// ===== Contoh Data Transaksi =====
-// Nanti bisa diganti fetch dari Google Sheets / CSV Tally
-const dataTransaksi = [
-  { tanggal: '2026-02-01', tipe: 'Pemasukan', jumlah: 500000, keterangan: 'Penjualan Produk A', nota: 'https://raw.githubusercontent.com/username/umkm-nota/main/nota/nota1.jpg' },
-  { tanggal: '2026-02-02', tipe: 'Pengeluaran', jumlah: 200000, keterangan: 'Beli Bahan Baku', nota: 'https://raw.githubusercontent.com/username/umkm-nota/main/nota/nota2.jpg' },
-  { tanggal: '2026-02-03', tipe: 'Pemasukan', jumlah: 700000, keterangan: 'Penjualan Produk B', nota: 'https://raw.githubusercontent.com/username/umkm-nota/main/nota/nota3.jpg' }
-];
+// ===== LINK CSV GOOGLE SHEETS =====
+const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS-qVdnfU6If_Ffkt_RJbIxAbgp1F52ne8t6hf0xkatr1iakkzTS4e_IEta64jpHoHBr0tL5AOsYOQX/pub?output=csv';
 
-// ===== Rekap Keuangan =====
-let totalPemasukan = 0, totalPengeluaran = 0;
-dataTransaksi.forEach(t => {
-  if(t.tipe === 'Pemasukan') totalPemasukan += t.jumlah;
-  else totalPengeluaran += t.jumlah;
-});
-const keuntungan = totalPemasukan - totalPengeluaran;
-const pajak = totalPemasukan * 0.01;
+// ===== FUNCTION FETCH CSV =====
+async function fetchCSV(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+  return text.split('\n').slice(1).map(row => {
+    const cols = row.split(',');
+    return {
+      tanggal: cols[0],
+      tipe: cols[1],
+      jumlah: parseFloat(cols[2]),
+      keterangan: cols[3],
+      nota: cols[4]
+    };
+  });
+}
 
-document.getElementById('totalPemasukan').textContent = 'Rp ' + totalPemasukan.toLocaleString();
-document.getElementById('totalPengeluaran').textContent = 'Rp ' + totalPengeluaran.toLocaleString();
-document.getElementById('keuntunganBersih').textContent = 'Rp ' + keuntungan.toLocaleString();
-document.getElementById('prakiraanPajak').textContent = 'Rp ' + pajak.toLocaleString();
+// ===== MAIN =====
+fetchCSV(csvUrl).then(dataTransaksi => {
+  // ===== Rekap Keuangan =====
+  let totalPemasukan = 0, totalPengeluaran = 0;
+  dataTransaksi.forEach(t => {
+    if(t.tipe==='Pemasukan') totalPemasukan += t.jumlah;
+    else totalPengeluaran += t.jumlah;
+  });
+  const keuntungan = totalPemasukan - totalPengeluaran;
+  const pajak = totalPemasukan * 0.01;
 
-// ===== Tabel Transaksi =====
-const tbody = document.getElementById('transaksiTable').querySelector('tbody');
-dataTransaksi.forEach(t => {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>${t.tanggal}</td>
-    <td>${t.tipe}</td>
-    <td>Rp ${t.jumlah.toLocaleString()}</td>
-    <td>${t.keterangan}</td>
-    <td><a href="${t.nota}" target="_blank"><img src="${t.nota}" class="nota" alt="Nota"></a></td>
-  `;
-  tbody.appendChild(tr);
-});
+  document.getElementById('totalPemasukan').textContent = 'Rp ' + totalPemasukan.toLocaleString();
+  document.getElementById('totalPengeluaran').textContent = 'Rp ' + totalPengeluaran.toLocaleString();
+  document.getElementById('keuntunganBersih').textContent = 'Rp ' + keuntungan.toLocaleString();
+  document.getElementById('prakiraanPajak').textContent = 'Rp ' + pajak.toLocaleString();
 
-// ===== Chart Arus Kas =====
-const ctx = document.getElementById('arusKasChart').getContext('2d');
-const arusKasChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: dataTransaksi.map(t => t.tanggal),
-    datasets: [
-      { label: 'Pemasukan', data: dataTransaksi.map(t => t.tipe==='Pemasukan'?t.jumlah:0), borderColor: 'green', backgroundColor: 'rgba(0,255,0,0.1)', fill:true },
-      { label: 'Pengeluaran', data: dataTransaksi.map(t => t.tipe==='Pengeluaran'?t.jumlah:0), borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.1)', fill:true }
-    ]
-  },
-  options: { responsive:true, plugins:{legend:{position:'top'}} }
+  // ===== Tabel Transaksi =====
+  const tbody = document.getElementById('transaksiTable').querySelector('tbody');
+  dataTransaksi.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${t.tanggal}</td>
+      <td>${t.tipe}</td>
+      <td>Rp ${t.jumlah.toLocaleString()}</td>
+      <td>${t.keterangan}</td>
+      <td>${t.nota ? `<a href="${t.nota}" target="_blank"><img src="${t.nota}" class="nota"></a>` : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // ===== Chart Arus Kas =====
+  const ctx = document.getElementById('arusKasChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dataTransaksi.map(t => t.tanggal),
+      datasets: [
+        { label:'Pemasukan', data:dataTransaksi.map(t => t.tipe==='Pemasukan'?t.jumlah:0), borderColor:'green', backgroundColor:'rgba(0,255,0,0.1)', fill:true },
+        { label:'Pengeluaran', data:dataTransaksi.map(t => t.tipe==='Pengeluaran'?t.jumlah:0), borderColor:'red', backgroundColor:'rgba(255,0,0,0.1)', fill:true }
+      ]
+    },
+    options: { responsive:true, plugins:{legend:{position:'top'}} }
+  });
 });
 </script>
 
