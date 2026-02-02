@@ -9,9 +9,9 @@
 body{font-family:sans-serif;background:#f0f0f0;padding:1rem;color:#333}
 .hidden{display:none}
 .container{max-width:800px;margin:auto;background:white;padding:1rem;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.15);}
-h2{text-align:center;color:#2d5016}
+h2{text-align:center;color:#ff4d6d}
 input,select,button{width:100%;padding:0.5rem;margin:0.3rem 0;border-radius:6px;border:1px solid #ccc}
-button{background:#ff4d6d;color:white;font-weight:600;border:none;cursor:pointer;transition:0.3s;}
+button{background:#2d5016;color:white;font-weight:600;border:none;cursor:pointer;transition:0.3s;}
 button:hover{opacity:0.85}
 table{width:100%;border-collapse: collapse;margin-top:0.5rem}
 th,td{border:1px solid #ccc;padding:6px;font-size:0.85rem;text-align:center}
@@ -77,7 +77,7 @@ tr:hover{background:#f0f8ff}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const WEB_APP_URL="https://script.google.com/macros/s/AKfycbyHAqXEUJ6Tf3Ro9C0IPJu2ovjICTejh2CjTBamQ9zATmVwCbrELniU8dxtXOlWmWGO2Q/exec";
+const WEB_APP_URL="https://script.google.com/macros/s/AKfycbyZoJxsd4k8Zs_E59iixCiua75gQCtcpyaiRfwwzJg-T_BaTBa3oZkWc8N4Af4T2xvmag/exec";
 let currentUser="";
 let transaksiData=[];
 
@@ -109,9 +109,6 @@ function login(){
 }
 
 function addTransaksi(){
-  const tipe=document.getElementById('tipeTrans').value;
-  const jumlah=document.getElementById('jumlahTrans').value;
-  const ket=document.getElementById('keteranganTrans').value;
   const fotoInput=document.getElementById('fotoNota');
   if(fotoInput.files.length>0){
     const reader=new FileReader();
@@ -188,7 +185,7 @@ function downloadPDF(){
   });
   y+=10;
   const totalLaba=transaksiData.reduce((a,b)=>a+b.laba,0);
-  const totalPajak=transaksiData.reduce((a,b)=>a.pajak,0);
+  const totalPajak=transaksiData.reduce((a,b)=>a+b.pajak,0);
   doc.text(`Total Laba: ${totalLaba}`,10,y);
   doc.text(`Pajak 0.5%: ${totalPajak.toFixed(2)}`,10,y+7);
   doc.save("Laporan_Keuangan.pdf");
